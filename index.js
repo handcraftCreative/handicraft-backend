@@ -7,51 +7,43 @@ const router = require("./routes/router");
 
 const app = express();
 
-const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:3000"]; // Add other allowed origins here
+// Allowed Origins for CORS
+const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:3000"];
 
+// CORS Middleware Configuration
 app.use(
-	cors({
-		origin: (origin, callback) => {
-			if (allowedOrigins.includes(origin) || !origin) {
-				callback(null, true);
-			} else {
-				callback(new Error("Not allowed by CORS"));
-			}
-		},
-		credentials: true,
-	})
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or CURL requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // This allows cookies to be sent cross-origin
+  })
 );
 
-// CORS configuration
-
-// app.use(
-// 	cors({
-// 		origin: (origin, callback) => {
-// 			if (origin === process.env.FRONTEND_URL || origin === "*") {
-// 				callback(null, origin);
-// 			} else {
-// 				callback(new Error("Not allowed by CORS"));
-// 			}
-// 		},
-// 		credentials: true,
-// 	})
-// );
-
-// Middleware to increase payload size limit
+// Middleware to handle JSON payloads and cookies
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 
+// API Routes
 app.use("/api", router);
 
-app.get("/", function (req, res) {
-	res.send("API is running...!");
+// Root route for basic health check
+app.get("/", (req, res) => {
+  res.send("API is running...!");
 });
 
-const PORT = 8080 || process.env.PORT;
+// Port Configuration
+const PORT = process.env.PORT || 8080;
 
+// Connect to Database and Start Server
 connectDB().then(() => {
-	app.listen(PORT, () => {
-		console.log("Connected to DB");
-		console.log("Server is running on port " + PORT);
-	});
+  app.listen(PORT, () => {
+    console.log("Connected to DB");
+    console.log("Server is running on port " + PORT);
+  });
 });
